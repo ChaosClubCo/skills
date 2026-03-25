@@ -1,6 +1,6 @@
 ---
 name: internal-comms
-description: A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).
+description: A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.). Also triggers on: write a team update, weekly standup email, all-hands summary, progress report, write comms for my team, internal announcement, company-wide email, write a 3P, PPP update, executive update, update my manager, draft a status email, incident summary, write a memo, team newsletter, company communication, draft a status update.
 license: Complete terms in LICENSE.txt
 ---
 
