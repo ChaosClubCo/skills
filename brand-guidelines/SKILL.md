@@ -1,6 +1,7 @@
 ---
 name: brand-guidelines
-description: Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.
+description: >
+  Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply. Also triggers on: make it on-brand, apply Anthropic colors, Anthropic branding, use Anthropic style, Poppins font, Lora font, corporate identity, visual identity, apply company colors, brand typography, design standards, make it look official, Anthropic design, orange accent, brand-consistent styling, apply brand to slides, apply brand to doc, dark neutral palette, brand color hex, official Anthropic look.
 license: Complete terms in LICENSE.txt
 ---
 
