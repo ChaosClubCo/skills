@@ -1,6 +1,7 @@
 ---
 name: artifacts-builder
-description: Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
+description: >
+  Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components — not for simple single-file HTML/JSX artifacts. Also triggers on: build a React artifact, complex frontend artifact, multi-component app in Claude, shadcn/ui components in artifact, Tailwind CSS artifact, React 18 artifact, bundle HTML artifact, TypeScript artifact, stateful UI artifact, multi-page artifact, artifact with routing, complex dashboard artifact, build a webapp as a Claude artifact, Vite React artifact, 40+ shadcn components, full stack Claude artifact, bundle and share app.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -58,17 +59,3 @@ This creates `bundle.html` - a self-contained artifact with all JavaScript, CSS,
 - Creates `.parcelrc` config with path alias support
 - Builds with Parcel (no source maps)
 - Inlines all assets into single HTML using html-inline
-
-### Step 4: Share Artifact with User
-
-Finally, share the bundled HTML file in conversation with the user so they can view it as an artifact.
-
-### Step 5: Testing/Visualizing the Artifact (Optional)
-
-Note: This is a completely optional step. Only perform if necessary or requested.
-
-To test/visualize the artifact, use available tools (including other Skills or built-in tools like Playwright or Puppeteer). In general, avoid testing the artifact upfront as it adds latency between the request and when the finished artifact can be seen. Test later, after presenting the artifact, if requested or if issues arise.
-
-## Reference
-
-- **shadcn/ui components**: https://ui.shadcn.com/docs/components
