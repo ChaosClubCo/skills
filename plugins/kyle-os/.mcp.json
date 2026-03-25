@@ -1,0 +1,48 @@
+{
+  "mcpServers": {
+    "notion": {
+      "type": "url",
+      "url": "https://mcp.notion.com/mcp"
+    },
+    "slack": {
+      "type": "url",
+      "url": "https://mcp.slack.com/mcp"
+    },
+    "gmail": {
+      "type": "url",
+      "url": "https://gmail.mcp.claude.com/mcp"
+    },
+    "google-calendar": {
+      "type": "url",
+      "url": "https://gcal.mcp.claude.com/mcp"
+    },
+    "n8n": {
+      "type": "url",
+      "url": "https://krosebrook.app.n8n.cloud/mcp-server/http"
+    },
+    "supabase": {
+      "type": "url",
+      "url": "https://mcp.supabase.com/mcp"
+    },
+    "linear": {
+      "type": "url",
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "sentry": {
+      "type": "url",
+      "url": "https://mcp.sentry.dev/mcp"
+    },
+    "figma": {
+      "type": "url",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "vercel": {
+      "type": "url",
+      "url": "https://mcp.vercel.com"
+    },
+    "posthog": {
+      "type": "url",
+      "url": "https://mcp.posthog.com/mcp"
+    }
+  }
+}
