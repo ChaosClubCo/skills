@@ -16,15 +16,12 @@ import sys
 from dataclasses import fields as dc_fields
 from pathlib import Path
 
-import pytest
-
 # Ensure project root is importable
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from lib.skill_validator import SkillValidator, ValidationResult, validate_all
-
 
 # ---------------------------------------------------------------------------
 # ValidationResult dataclass tests
@@ -174,7 +171,8 @@ class TestValidateFrontmatter:
 
     def test_missing_name_returns_error(self):
         validator = SkillValidator()
-        errors = validator.validate_frontmatter({"name": "", "description": "Build and create APIs for testing purposes."})
+        frontmatter = {"name": "", "description": "Build and create APIs for testing purposes."}
+        errors = validator.validate_frontmatter(frontmatter)
         assert any("name" in e.lower() for e in errors)
 
     def test_invalid_name_characters(self):

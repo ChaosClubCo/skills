@@ -26,7 +26,6 @@ from typing import Dict, List, Optional, Tuple
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-
 from lib.config import MASTER_DIR
 
 TRIGGER_VERBS = [

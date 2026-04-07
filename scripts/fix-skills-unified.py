@@ -30,16 +30,15 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lib.config import (
-    MASTER_DIR,
     CATEGORIES,
+    CORE_SECTION_NAMES,
+    MASTER_DIR,
     TRIGGER_VERBS,
     USE_WHEN_MAP,
     VERB_MAP,
-    CORE_SECTION_NAMES,
     WORKFLOW_PATTERNS,
 )
-from lib.logger import setup_logger, create_error_tracker
-
+from lib.logger import create_error_tracker, setup_logger
 
 # ---------------------------------------------------------------------------
 # Shared helpers

@@ -5,8 +5,7 @@ All scripts and lib modules should import from here instead of redefining consta
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Set
-
+from typing import Dict, List, Set
 
 # ---------------------------------------------------------------------------
 # Paths

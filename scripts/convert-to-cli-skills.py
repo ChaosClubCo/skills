@@ -26,7 +26,6 @@ No external dependencies. Uses only pathlib, re, json, argparse.
 """
 
 import argparse
-import json
 import re
 import sys
 import warnings
@@ -37,7 +36,7 @@ from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lib.config import BASE_DIR, MASTER_DIR, CATEGORIES
+from lib.config import BASE_DIR, CATEGORIES, MASTER_DIR
 from lib.skill_parser import discover_all_skills, get_effective_slug
 
 # Graceful import of shared platform tuning module

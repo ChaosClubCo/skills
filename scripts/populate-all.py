@@ -19,11 +19,9 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,14 +34,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lib.config import (
     BASE_DIR,
-    MASTER_DIR,
     CATEGORIES,
     CATEGORY_TEMPERATURES,
-    CODEX_CATEGORY_MODELS as CODEX_MODELS,
     CODEX_TOOLS,
     COPILOT_PATTERNS,
     GEMINI_SAFETY_SETTINGS,
+    MASTER_DIR,
     PLATFORM_OUTPUTS,
+)
+from lib.config import (
+    CODEX_CATEGORY_MODELS as CODEX_MODELS,
 )
 
 # Bundle roots
@@ -688,7 +688,7 @@ def upgrade_gemini_agents(skills: List[Dict], dry_run: bool = False) -> Tuple[in
     """Upgrade existing 257 Gemini agent stubs and create remaining agents."""
     upgraded = 0
     created = 0
-    skills_by_slug = {s["slug"]: s for s in skills}
+    {s["slug"]: s for s in skills}
 
     # Process all skills - both upgrade existing and create new
     for s in skills:

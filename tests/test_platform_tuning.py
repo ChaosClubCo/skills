@@ -15,12 +15,11 @@ Covers:
 import sys
 from pathlib import Path
 
-import pytest
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from lib.config import CATEGORY_TEMPERATURES as CATEGORY_TEMPERATURE_MAP
 from lib.platform_tuning import (
     COMPLEXITY_MODEL_MAP,
     estimate_complexity,
@@ -29,8 +28,6 @@ from lib.platform_tuning import (
     get_copilot_settings,
     get_gemini_settings,
 )
-from lib.config import CATEGORY_TEMPERATURES as CATEGORY_TEMPERATURE_MAP
-
 
 # ---------------------------------------------------------------------------
 # estimate_complexity

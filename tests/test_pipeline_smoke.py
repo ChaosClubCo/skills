@@ -23,9 +23,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from lib.config import CATEGORIES, MASTER_DIR
-from lib.skill_parser import parse_skill_file, discover_all_skills
+from lib.skill_parser import discover_all_skills, parse_skill_file
 from lib.skill_validator import SkillValidator, ValidationResult
-
 
 # ---------------------------------------------------------------------------
 # Helpers

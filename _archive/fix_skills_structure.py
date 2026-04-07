@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-from lib.config import MASTER_DIR, CATEGORIES
+from lib.config import CATEGORIES, MASTER_DIR
 
 WORKFLOW_PATTERNS = [
     r"^##\s*Core Workflow", r"^##\s*Instructions", r"^##\s*Core Process",

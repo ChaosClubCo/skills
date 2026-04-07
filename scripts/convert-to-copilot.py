@@ -111,7 +111,7 @@ This script is a thin wrapper that calls:
     print("=" * 60)
     print("  GitHub Copilot Skill Converter (Python)")
     print("=" * 60)
-    print(f"  Using: sync-skills.py CopilotConverter")
+    print("  Using: sync-skills.py CopilotConverter")
     print(f"  Output: {current_dir / 'platforms' / 'github-copilot' / 'copilot-skills'}")
     print(f"  Format: custom-instructions/{'{category}'}/{'{slug}'}.md")
     print()

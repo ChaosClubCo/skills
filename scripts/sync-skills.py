@@ -45,12 +45,12 @@ _HAS_SKILL_VALIDATOR = False
 
 try:
     from lib.platform_tuning import (
-        get_gemini_settings,
-        get_codex_settings,
-        get_copilot_settings,
-        get_claude_settings,
         PLATFORM_TEMPLATES,
         estimate_complexity,
+        get_claude_settings,
+        get_codex_settings,
+        get_copilot_settings,
+        get_gemini_settings,
     )
     _HAS_PLATFORM_TUNING = True
 except ImportError:
@@ -540,7 +540,7 @@ class ClaudeConverter:
                 tool_hint_items.append(
                     f'  - type: {hint["type"]}\n    name: {hint["name"]}\n    description: "{hint["description"]}"'
                 )
-            tool_hints_yaml = f"\ntool_hints:\n" + "\n".join(tool_hint_items)
+            tool_hints_yaml = "\ntool_hints:\n" + "\n".join(tool_hint_items)
 
         frontmatter = (
             f"---\n"
@@ -939,21 +939,21 @@ class SkillsSyncer:
             total = enrichment_stats.get("total", 0)
             enriched = enrichment_stats.get("enriched", 0)
             pct = (enriched / total * 100) if total > 0 else 0
-            print(f"\nEnrichment statistics:")
+            print("\nEnrichment statistics:")
             print(f"  Total skills processed : {total}")
             print(f"  Successfully enriched  : {enriched} ({pct:.0f}%)")
             if _HAS_PLATFORM_TUNING:
-                print(f"  Platform tuning        : active (lib.platform_tuning)")
+                print("  Platform tuning        : active (lib.platform_tuning)")
             else:
-                print(f"  Platform tuning        : fallback (lib not available)")
+                print("  Platform tuning        : fallback (lib not available)")
             if _HAS_METADATA_ENRICHER:
-                print(f"  Metadata enrichment    : active (lib.metadata_enricher)")
+                print("  Metadata enrichment    : active (lib.metadata_enricher)")
             else:
-                print(f"  Metadata enrichment    : disabled (lib not available)")
+                print("  Metadata enrichment    : disabled (lib not available)")
             if _HAS_SKILL_VALIDATOR:
-                print(f"  Skill validation       : active (lib.skill_validator)")
+                print("  Skill validation       : active (lib.skill_validator)")
             else:
-                print(f"  Skill validation       : disabled (lib not available)")
+                print("  Skill validation       : disabled (lib not available)")
 
         print()
 

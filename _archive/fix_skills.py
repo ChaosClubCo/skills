@@ -36,15 +36,14 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from lib.config import (
-    MASTER_DIR,
     CATEGORIES,
+    CORE_SECTION_NAMES,
+    MASTER_DIR,
     TRIGGER_VERBS,
     USE_WHEN_MAP,
     VERB_MAP,
-    CORE_SECTION_NAMES,
     WORKFLOW_PATTERNS,
 )
-
 
 # ---------------------------------------------------------------------------
 # Shared helpers

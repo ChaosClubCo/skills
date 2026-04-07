@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-from lib.config import MASTER_DIR, CATEGORIES
+from lib.config import CATEGORIES, MASTER_DIR
 
 CORE_SECTION_NAMES = {
     "core workflow", "instructions", "core processes", "core process",

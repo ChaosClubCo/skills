@@ -29,11 +29,9 @@ Legacy usage (still supported):
 
 import argparse
 import json
-import os
 import re
 import sys
 import warnings
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -44,17 +42,25 @@ from typing import Any, Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lib.config import (
-    MASTER_DIR as _MASTER_DIR,
     CATEGORIES,
-    CODEX_CATEGORY_MODELS as MODEL_MAP,
+)
+from lib.config import (
     CATEGORY_TEMPERATURES as TEMPERATURE_MAP,
+)
+from lib.config import (
+    CODEX_CATEGORY_MODELS as MODEL_MAP,
+)
+from lib.config import (
     CODEX_TOOLS as TOOLS_MAP,
+)
+from lib.config import (
+    MASTER_DIR as _MASTER_DIR,
 )
 
 # Graceful import of shared platform tuning module
 _HAS_PLATFORM_TUNING = False
 try:
-    from lib.platform_tuning import get_codex_settings, estimate_complexity
+    from lib.platform_tuning import get_codex_settings
     _HAS_PLATFORM_TUNING = True
 except ImportError:
     pass
@@ -135,7 +141,6 @@ def parse_skill_md(file_path: Path) -> Optional[Dict[str, Any]]:
 def generate_starters(name: str, description: str, category: str) -> List[str]:
     """Generate 4 contextual conversation starters for a skill."""
     clean_name = name.replace("-", " ").title()
-    starters = []
 
     # Category-specific starter templates
     templates = {

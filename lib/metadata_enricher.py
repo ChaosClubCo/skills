@@ -18,7 +18,7 @@ import re
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Default master skills directory (sibling to lib/)
 _DEFAULT_MASTER_DIR = Path(__file__).resolve().parent.parent / "_master-skills"
@@ -467,7 +467,7 @@ def enrich_skill(
     """
     enriched: Dict[str, Any] = dict(skill_data)
     body = skill_data.get("body", "")
-    body_lower = body.lower()
+    body.lower()
     path_str = skill_data.get("path", "")
 
     # Tags

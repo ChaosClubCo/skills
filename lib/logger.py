@@ -9,7 +9,6 @@ import logging
 import sys
 from typing import Optional
 
-
 # ANSI Color codes for terminal output
 RED = '\033[91m'
 GREEN = '\033[92m'

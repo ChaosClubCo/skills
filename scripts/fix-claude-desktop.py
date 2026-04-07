@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import importlib.util
+
 _spec = importlib.util.spec_from_file_location("populate_all", Path(__file__).parent / "populate-all.py")
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
@@ -70,13 +71,13 @@ def main():
     if root_plugin.exists():
         print(f"  ✓ Root plugin.json exists: {root_plugin}")
     else:
-        print(f"  ❌ Root plugin.json missing!")
+        print("  ❌ Root plugin.json missing!")
 
     # Check a sample skill structure
     skills_dir = CLAUDE_DESKTOP / ".claude-plugin" / "skills"
     sample_skills = list(skills_dir.glob("*"))[:3]
 
-    print(f"\n  Sample skill structures (first 3):")
+    print("\n  Sample skill structures (first 3):")
     for skill_dir in sample_skills:
         skill_md = skill_dir / "SKILL.md"
         nested_plugin = skill_dir / ".claude-plugin"

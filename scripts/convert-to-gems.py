@@ -21,16 +21,14 @@ Legacy usage (still supported):
     python convert_to_gems.py --category creative --dry-run
 """
 
-import os
-import sys
+import argparse
 import json
 import re
-import argparse
-import string
+import sys
 import warnings
-from pathlib import Path
 from collections import Counter
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Ensure project root is on sys.path so lib.* imports resolve correctly
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -40,18 +38,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # ---------------------------------------------------------------------------
 
 from lib.config import (
-    MASTER_DIR as _MASTER_DIR,
     CATEGORIES,
     CATEGORY_TEMPERATURES,
-    GEMINI_SAFETY_SETTINGS as SAFETY_SETTINGS,
     GROUNDING_CATEGORIES,
     GROUNDING_PREFIX,
+)
+from lib.config import (
+    GEMINI_SAFETY_SETTINGS as SAFETY_SETTINGS,
+)
+from lib.config import (
+    MASTER_DIR as _MASTER_DIR,
 )
 
 # Graceful import of shared platform tuning module
 _HAS_PLATFORM_TUNING = False
 try:
-    from lib.platform_tuning import get_gemini_settings, estimate_complexity, CATEGORY_TEMPERATURE_MAP
+    from lib.platform_tuning import CATEGORY_TEMPERATURE_MAP, estimate_complexity, get_gemini_settings
     _HAS_PLATFORM_TUNING = True
 except ImportError:
     pass

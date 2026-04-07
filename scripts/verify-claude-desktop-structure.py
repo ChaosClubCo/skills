@@ -21,7 +21,7 @@ def verify_structure():
 
     # Check root plugin.json
     root_plugin = CLAUDE_DESKTOP / "plugin.json"
-    print(f"\n1. Root plugin.json")
+    print("\n1. Root plugin.json")
     if root_plugin.exists():
         print(f"   ✓ EXISTS: {root_plugin}")
         import json
@@ -30,11 +30,11 @@ def verify_structure():
             print(f"   Content: {json.dumps(data, indent=2)}")
     else:
         print(f"   ❌ MISSING: {root_plugin}")
-        print(f"   Expected: plugin.json at root with skills_dir metadata")
+        print("   Expected: plugin.json at root with skills_dir metadata")
 
     # Check skills directory
     skills_dir = CLAUDE_DESKTOP / ".claude-plugin" / "skills"
-    print(f"\n2. Skills directory structure")
+    print("\n2. Skills directory structure")
 
     if not skills_dir.exists():
         print(f"   ❌ Skills dir missing: {skills_dir}")
@@ -46,7 +46,7 @@ def verify_structure():
     # Sample 5 skills
     sample_skills = all_skills[:5]
 
-    print(f"\n3. Sample skill structures (first 5):")
+    print("\n3. Sample skill structures (first 5):")
 
     issues = []
 
@@ -63,20 +63,20 @@ def verify_structure():
 
         if correct:
             print(f"   ✓ {skill_name}/")
-            print(f"       SKILL.md: EXISTS")
+            print("       SKILL.md: EXISTS")
         else:
             print(f"   ❌ {skill_name}/")
 
             if skill_md.exists():
-                print(f"       SKILL.md: EXISTS")
+                print("       SKILL.md: EXISTS")
             else:
-                print(f"       SKILL.md: MISSING")
+                print("       SKILL.md: MISSING")
 
             if nested_plugin_dir.exists():
-                print(f"       .claude-plugin/: EXISTS (WRONG! Should not be here)")
+                print("       .claude-plugin/: EXISTS (WRONG! Should not be here)")
                 nested_skill_md = nested_plugin_dir / "skills" / "SKILL.md"
                 if nested_skill_md.exists():
-                    print(f"       .claude-plugin/skills/SKILL.md: EXISTS (nested too deep!)")
+                    print("       .claude-plugin/skills/SKILL.md: EXISTS (nested too deep!)")
                     issues.append(f"{skill_name}: nested .claude-plugin structure")
 
     # Check if any broken structure
