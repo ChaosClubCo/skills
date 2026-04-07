@@ -1,10 +1,12 @@
 # Skills Library - Claude Code Instructions
 
 ## Project Overview
-Conversion pipeline transforming 507 master AI skill definitions into platform-specific formats.
+Conversion pipeline transforming 515 master AI skill definitions into platform-specific formats.
+- **Repo**: github.com/Krosebrook/skills-pipeline
 - **Platforms**: Claude, Gemini, GitHub Copilot, OpenAI Codex
 - **Output**: ~32,500 files across all platform variants
-- **Categories**: ai-agents (232), technical (127), strategy (59), creative (40), operations (24), industry (25)
+- **Categories**: ai-agents (234), technical (131), strategy (59), creative (40), operations (27), industry (25)
+- **Related repos**: Krosebrook/skills (Anthropic fork), ChaosClubCo/skills (org customs), Krosebrook/intinc-platform (private INT INC skills)
 
 ## Key Structure
 ```
@@ -71,3 +73,8 @@ python scripts/pipeline.py --dry-run
 
 ## Master Skill Format
 YAML frontmatter + structured markdown body. Slugs derived from directory names.
+
+## CI/CD
+- GitHub Actions: ruff lint + pytest on push to main
+- Per-file lint ignores: E402 for tests (sys.path), E501 for scripts (long templates)
+- No deployment step — this is a pipeline tool, not a deployed service
