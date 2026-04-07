@@ -1,0 +1,554 @@
+# Scripts Reference
+
+Comprehensive reference for all pipeline scripts in the Skills Library project.
+
+Last updated: 2026-02-14
+
+---
+
+## Table of Contents
+
+1. [Environment Setup](#environment-setup)
+2. [Recommended Pipeline Order](#recommended-pipeline-order)
+3. [Active Scripts](#active-scripts)
+   - [populate_all.py](#populate_allpy)
+   - [sync-skills.py](#sync-skillspy)
+   - [fix_skills_unified.py](#fix_skills_unifiedpy)
+   - [UniversalAdapters/converters/batch-converter.js](#universaladaptersconvertersbatch-converterjs)
+4. [Deprecated Scripts](#deprecated-scripts)
+   - [convert_to_gems.py](#convert_to_gemspy)
+   - [convert_to_codex_responses.py](#convert_to_codex_responsespy)
+   - [convert_to_cli_skills.py](#convert_to_cli_skillspy)
+   - [convert-to-copilot.js](#convert-to-copilotjs)
+   - [fix_skills.py / fix_skills_structure.py / fix_skills_pass3.py](#fix_skillspy--fix_skills_structurepy--fix_skills_pass3py)
+5. [Common Workflows](#common-workflows)
+
+---
+
+## Environment Setup
+
+### Python
+
+- **Python 3.8+** required.
+- All Python scripts use only the standard library plus the local `lib/` package (no pip install needed).
+- **Windows encoding fix** -- set the following environment variable before running any script to avoid cp1252 codec errors:
+
+```bash
+export PYTHONIOENCODING=utf-8
+```
+
+Or on Windows CMD:
+
+```cmd
+set PYTHONIOENCODING=utf-8
+```
+
+### Node.js
+
+- **Node.js 16+** recommended for the JavaScript scripts (`convert-to-copilot.js`, `batch-converter.js`).
+- No npm dependencies required; all JS scripts use only built-in `fs` and `path` modules.
+- The `batch-converter.js` script requires the `UniversalAdapters/adapters/` module tree.
+
+### Shared Libraries (lib/)
+
+The `lib/` directory provides optional enrichment modules. Scripts degrade gracefully when these are missing:
+
+| Module | Purpose | Used By |
+|---|---|---|
+| `lib/config.py` | Shared constants (paths, categories, temperatures) | All Python scripts |
+| `lib/platform_tuning.py` | Platform-specific model/temp/tool settings | sync-skills.py, converters |
+| `lib/metadata_enricher.py` | Auto-tagging, related skills, complexity estimation | sync-skills.py |
+| `lib/skill_validator.py` | Quality scoring and validation | sync-skills.py (--validate) |
+| `lib/skill_parser.py` | Unified skill discovery and slug resolution | Multiple scripts |
+| `lib/logger.py` | Structured logging and error tracking | fix_skills_unified.py |
+
+---
+
+## Recommended Pipeline Order
+
+Run scripts in this order for a full rebuild from master skills:
+
+```
+Step 1: Quality fixes on _master-skills/
+        python fix_skills_unified.py --all
+
+Step 2: Sync to all platform output directories
+        python sync-skills.py --targets all --validate --stats
+
+Step 3: Populate bundles, thin variants, and run cleanup
+        python populate_all.py --phase all
+```
+
+For a targeted rebuild of a single category:
+
+```
+python fix_skills_unified.py --category technical
+python sync-skills.py --targets all --category technical --stats
+python populate_all.py --phase all
+```
+
+---
+
+## Active Scripts
+
+---
+
+### populate_all.py
+
+**Purpose:** Top-level orchestrator that populates bundles (Gemini, Codex, Copilot), generates thin platform variants (Copilot Frontier, Gemini Agents, Claude Desktop, Claude Web), runs quality fixes, and performs cleanup of junk/deprecated files.
+
+**Status:** Active
+
+#### Usage
+
+```bash
+python populate_all.py --phase all
+python populate_all.py --phase bundles
+python populate_all.py --phase variants
+python populate_all.py --phase quality
+python populate_all.py --phase cleanup
+python populate_all.py --dry-run --phase all
+```
+
+#### Arguments
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--phase` | choice | `all` | Which phase to run. Choices: `all`, `bundles`, `variants`, `quality`, `cleanup` |
+| `--dry-run` | flag | off | Preview what would be written without modifying any files |
+
+#### Phases (execution order when `--phase all`)
+
+1. **quality** -- Fixes missing frontmatter across all master skills. Runs first so subsequent phases see clean data.
+2. **bundles** -- Populates 18 bundle directories across 3 platforms (7 Gemini, 6 Copilot, 5 Codex). Copies and converts skills into each bundle's target format.
+3. **variants** -- Generates thin variant outputs: Copilot Frontier (dev-focused subset), Gemini Agents (paired GEMINI.md + JSON), Claude Desktop (.claude-plugin format), Claude Web (project-instructions.md).
+4. **cleanup** -- Removes junk skills and deprecated files from output directories.
+
+#### Input / Output
+
+| Direction | Path | Format |
+|---|---|---|
+| Input | `_master-skills/{category}/{slug}/SKILL.md` | YAML frontmatter + Markdown |
+| Output | `GeminiSkills/bundles/` | JSON gems in 7 bundle subdirectories |
+| Output | `CodexSkills/bundles/` | JSON responses in 5 bundle subdirectories |
+| Output | `CopilotSkills/bundles/` | Markdown skills in 6 bundle subdirectories |
+| Output | `CopilotSkills-Frontier/` | SKILL.md (dev-focused subset) |
+| Output | `GeminiSkills-Agents/.gemini/agents/` | Paired GEMINI.md + JSON |
+| Output | `ClaudeSkills-Desktop/.claude-plugin/skills/` | SKILL.md |
+| Output | `ClaudeSkills-Web/projects/` | project-instructions.md |
+
+#### Examples
+
+```bash
+# Full rebuild of all bundles and variants
+export PYTHONIOENCODING=utf-8
+python populate_all.py --phase all
+
+# Preview bundle population only
+python populate_all.py --phase bundles --dry-run
+
+# Run only the cleanup phase
+python populate_all.py --phase cleanup
+```
+
+#### Notes
+
+- Internally calls `discover_all_skills()` from `lib/skill_parser` which handles cross-category slug deduplication (5 collision groups use `{category}--{slug}` prefix).
+- Re-discovers skills after the quality phase to pick up any frontmatter repairs before bundle/variant phases.
+- The phase numbering in the source is non-sequential (quality is "Phase 3" internally but runs first).
+
+---
+
+### sync-skills.py
+
+**Purpose:** Central multi-platform sync pipeline. Converts master SKILL.md files into 5 platform-specific output formats: Gemini Gem JSON, Copilot custom-instruction Markdown, Codex Responses API JSON, Claude enhanced SKILL.md, and CLI variants for all 4 platforms.
+
+**Status:** Active -- this is the primary conversion entry point.
+
+#### Usage
+
+```bash
+python sync-skills.py --targets all
+python sync-skills.py --targets gemini,codex --validate
+python sync-skills.py --skill technical/api-development --targets all
+python sync-skills.py --category ai-agents --targets gemini --dry-run
+python sync-skills.py --targets all --stats
+```
+
+#### Arguments
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--targets` | string | `all` | Comma-separated list of targets: `gemini`, `copilot`, `codex`, `claude`, `cli`, or `all` |
+| `--skill` | string | none | Sync a specific skill by path (e.g., `technical/api-development`) |
+| `--category` | string | none | Sync only skills in a specific category (e.g., `ai-agents`) |
+| `--validate` | flag | off | Run skill validation before converting (requires `lib.skill_validator`) |
+| `--dry-run` | flag | off | Show what would be converted without writing any files |
+| `--stats` | flag | off | Show enrichment and platform-tuning statistics after conversion |
+
+#### Input / Output
+
+| Direction | Path | Format |
+|---|---|---|
+| Input | `_master-skills/{category}/{slug}/SKILL.md` | YAML frontmatter + Markdown |
+| Output (gemini) | `GeminiSkills/gems/{category}/{slug}.json` | Gemini Gem JSON with model/temp/safety/grounding |
+| Output (copilot) | `CopilotSkills/custom-instructions/{category}/{slug}.md` | Enhanced Copilot instruction Markdown |
+| Output (codex) | `CodexSkills/{slug}/` | Responses API JSON, GPT Builder JSON, system-prompt TXT |
+| Output (claude) | `ClaudeSkills/skills/{category}/{slug}/SKILL.md` | Claude SKILL.md with enhanced frontmatter |
+| Output (cli) | `*Skills-CLI/skills/{slug}/SKILL.md` or `AGENTS.md` | CLI skill files for Claude, Gemini, Codex, Copilot |
+
+#### Examples
+
+```bash
+# Convert all skills to all platforms with validation and stats
+export PYTHONIOENCODING=utf-8
+python sync-skills.py --targets all --validate --stats
+
+# Dry-run Gemini conversion for one category
+python sync-skills.py --targets gemini --category creative --dry-run
+
+# Convert a single skill to Codex format
+python sync-skills.py --targets codex --skill technical/api-development
+```
+
+#### Notes
+
+- Prints library availability status at startup (platform tuning, metadata enrichment, skill validation). Falls back to inline defaults when `lib/` modules are missing.
+- Uses `lib/platform_tuning.py` for per-category model selection, temperature, safety settings, and tool assignments.
+- Uses `lib/metadata_enricher.py` for auto-tagging, related skill detection, and complexity estimation.
+- The `cli` target writes to 4 separate output directories (one per CLI platform).
+
+---
+
+### fix_skills_unified.py
+
+**Purpose:** Consolidated multi-pass quality fixer for `_master-skills/` SKILL.md files. Merges the functionality of the three original pass scripts into a single tool with shared I/O and consistent CLI flags.
+
+**Status:** Active -- replaces `fix_skills.py`, `fix_skills_structure.py`, and `fix_skills_pass3.py`.
+
+#### Usage
+
+```bash
+python fix_skills_unified.py --all
+python fix_skills_unified.py --all --pass 1
+python fix_skills_unified.py --all --pass 2
+python fix_skills_unified.py --all --pass 3
+python fix_skills_unified.py --category ai-agents
+python fix_skills_unified.py --skill ai-agents/ceo
+python fix_skills_unified.py --dry-run --all --verbose
+```
+
+#### Arguments
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--all` | flag | off | Fix all skills across all categories |
+| `--category` | string | none | Fix skills in a specific category |
+| `--skill` | string | none | Fix a single skill by path (e.g., `ai-agents/ceo`) |
+| `--pass` | string | `all` | Which pass to run: `1`, `2`, `3`, or `all` |
+| `--dry-run` | flag | off | Preview fixes without writing any files |
+| `--verbose` | flag | off | Show all skills in output, including those with no changes |
+
+At least one of `--all`, `--category`, or `--skill` must be provided.
+
+#### Passes
+
+| Pass | Name | Description |
+|---|---|---|
+| 1 | Frontmatter repair | Repairs/adds YAML frontmatter, generates missing descriptions, adds trigger verbs and "Use when" phrases |
+| 2 | Structure fixes | Promotes `#` headings to `##`, adds workflow/instructions section headings where missing |
+| 3 | Normalization | Slugifies names, trims descriptions over 500 characters, adds Core Workflow/Overview headings |
+
+#### Input / Output
+
+| Direction | Path | Format |
+|---|---|---|
+| Input/Output | `_master-skills/{category}/{slug}/SKILL.md` | YAML frontmatter + Markdown (files modified in place) |
+
+#### Examples
+
+```bash
+# Run all passes on all skills (standard pre-sync workflow)
+export PYTHONIOENCODING=utf-8
+python fix_skills_unified.py --all
+
+# Preview pass 1 fixes on the ai-agents category
+python fix_skills_unified.py --category ai-agents --pass 1 --dry-run --verbose
+
+# Fix a single skill
+python fix_skills_unified.py --skill technical/api-development
+```
+
+#### Notes
+
+- Modifies files in place. Always use `--dry-run` first to preview changes on large batches.
+- Uses `lib/config.py` for `TRIGGER_VERBS`, `USE_WHEN_MAP`, `VERB_MAP`, `CORE_SECTION_NAMES`, and `WORKFLOW_PATTERNS`.
+- Prints summary statistics at the end: FIXED, NO_CHANGE, SKIP_EMPTY, ERROR counts.
+
+---
+
+### UniversalAdapters/converters/batch-converter.js
+
+**Purpose:** Node.js batch converter that reads all SKILL.md files from a source directory and converts them to all supported adapter platforms in one pass. Uses the adapter plugin system from `UniversalAdapters/adapters/`.
+
+**Status:** Active -- standalone utility, independent from the Python pipeline.
+
+#### Usage
+
+```bash
+node UniversalAdapters/converters/batch-converter.js <source-dir> <output-dir>
+```
+
+#### Arguments
+
+| Position | Default | Description |
+|---|---|---|
+| 1 (`source-dir`) | `.` | Directory to scan recursively for SKILL.md files |
+| 2 (`output-dir`) | `./output` | Root output directory; each platform gets a subdirectory |
+
+No named flags. Arguments are positional.
+
+#### Input / Output
+
+| Direction | Path | Format |
+|---|---|---|
+| Input | `<source-dir>/**/**/SKILL.md` | YAML frontmatter + Markdown (recursive scan) |
+| Output | `<output-dir>/<platform>/<slug>/` | Platform-specific files as determined by each adapter |
+
+Supported platforms are determined dynamically by `adapters.listPlatforms()`. The adapters directory contains 8 adapter modules: claude-cli, claude-desktop, claude-web, codex-cli, copilot-cli, gemini-cli, github-repo, and index.
+
+#### Examples
+
+```bash
+# Convert all master skills to all adapter platforms
+node UniversalAdapters/converters/batch-converter.js _master-skills ./UniversalAdapters/output
+
+# Convert a subset directory
+node UniversalAdapters/converters/batch-converter.js _master-skills/technical ./output-technical
+```
+
+#### Notes
+
+- Handles cross-category slug collisions by prepending `{category}--` when duplicate slugs are detected across categories.
+- Parses the full SKILL.md body and maps master sections (Overview, When to Use, Core Processes, etc.) to adapter content fields.
+- Prints a success/failure summary and lists the first 10 errors if any conversions fail.
+- No npm install required; uses only `fs`, `path`, and the local adapters module.
+
+---
+
+## Deprecated Scripts
+
+The following scripts are maintained for backward compatibility but should not be used for new work. Each delegates to the active replacement when possible.
+
+---
+
+### convert_to_gems.py
+
+**Purpose:** Converts SKILL.md files to Gemini Gem JSON format.
+
+**Status:** Deprecated. Use `python sync-skills.py --targets gemini` instead.
+
+When imported libraries are available, this script delegates to the `GeminiConverter` class from `sync-skills.py`. Otherwise, it falls back to its own inline conversion logic.
+
+#### Arguments
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--category` | choice | none | Process only this category (choices: technical, strategy, creative, industry, operations, ai-agents) |
+| `--model-override` | string | none | Force a specific Gemini model for every gem (e.g., `gemini-2.5-pro`) |
+| `--dry-run` | flag | off | Preview without writing files |
+
+#### Legacy Usage
+
+```bash
+python convert_to_gems.py
+python convert_to_gems.py --category technical
+python convert_to_gems.py --category strategy --model-override gemini-2.5-pro
+python convert_to_gems.py --dry-run
+```
+
+---
+
+### convert_to_codex_responses.py
+
+**Purpose:** Converts SKILL.md files to OpenAI Responses API format, plus GPT Builder, Agent Builder, and system-prompt TXT formats.
+
+**Status:** Deprecated. Use `python sync-skills.py --targets codex` instead.
+
+Delegates to the `CodexResponsesConverter` class when available. This standalone script generates 5 formats (responses, gpts, agents, system-prompts, cli/AGENTS.md) while sync-skills.py generates the core 3 (responses, gpts, system-prompts). The agent.json and cli/AGENTS.md formats are unique to this script.
+
+#### Arguments
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--source` | path | `_master-skills/` | Source master-skills directory |
+| `--target` | path | `CodexSkills/` | Output directory |
+| `--category` | string | none | Convert only this category |
+| `--skill` | string | none | Convert only this skill name |
+| `--dry-run` | flag | off | Preview without writing files |
+
+#### Legacy Usage
+
+```bash
+python convert_to_codex_responses.py
+python convert_to_codex_responses.py --category technical
+python convert_to_codex_responses.py --skill api-development
+python convert_to_codex_responses.py --dry-run
+```
+
+---
+
+### convert_to_cli_skills.py
+
+**Purpose:** Universal CLI skill placer that converts master skills into platform-specific CLI skill formats for Claude CLI, Gemini CLI, Codex CLI, and GitHub Copilot CLI.
+
+**Status:** Deprecated. Use `python sync-skills.py --targets cli` instead.
+
+#### Arguments
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--platforms` | string | `all` | Comma-separated list: `claude`, `gemini`, `codex`, `copilot`, or `all` |
+| `--category` | choice | none | Convert only skills from this category |
+| `--skill` | string | none | Convert only this specific skill (by directory name) |
+| `--dry-run` | flag | off | Show what would be done without writing files |
+
+#### Legacy Usage
+
+```bash
+python convert_to_cli_skills.py --platforms all
+python convert_to_cli_skills.py --platforms claude,gemini
+python convert_to_cli_skills.py --platforms codex --category technical
+python convert_to_cli_skills.py --platforms all --skill api-development
+python convert_to_cli_skills.py --platforms all --dry-run
+```
+
+---
+
+### convert-to-copilot.js
+
+**Purpose:** JavaScript converter that generates GitHub Copilot-specific formats: custom-instructions, agent-skills, path-specific instructions, and category READMEs.
+
+**Status:** Deprecated. Use `python sync-skills.py --targets copilot` instead.
+
+This JS converter duplicates the `CopilotConverter` class in `sync-skills.py` and cannot share the Python `lib/` modules. It will be removed in a future version.
+
+#### Usage
+
+```bash
+node convert-to-copilot.js
+```
+
+No command-line arguments. Source and target directories are hardcoded:
+
+| Direction | Path |
+|---|---|
+| Input | `_master-skills/{category}/{slug}/SKILL.md` |
+| Output | `GithubCopilot/CopilotSkills/custom-instructions/` |
+| Output | `GithubCopilot/CopilotSkills/agent-skills/` |
+| Output | `GithubCopilot/CopilotSkills/instructions/` |
+
+---
+
+### fix_skills.py / fix_skills_structure.py / fix_skills_pass3.py
+
+**Purpose:** Original three-file quality fixer pipeline. Each script handles one pass of quality fixes on `_master-skills/` SKILL.md files.
+
+**Status:** Deprecated. Use `python fix_skills_unified.py` instead.
+
+| Script | Pass | Description |
+|---|---|---|
+| `fix_skills.py` | 1 | Frontmatter repair, description generation, trigger verbs |
+| `fix_skills_structure.py` | 2 | Heading promotion, workflow section headings |
+| `fix_skills_pass3.py` | 3 | Name slugification, description trimming |
+
+All three scripts accept `--all`, `--dry-run`, and related flags. The unified replacement provides identical functionality with shared I/O and a single `--pass` selector.
+
+#### Legacy Usage
+
+```bash
+# Old pipeline (deprecated)
+python fix_skills.py --all
+python fix_skills_structure.py --all
+python fix_skills_pass3.py --all
+
+# New equivalent
+python fix_skills_unified.py --all
+```
+
+---
+
+## Common Workflows
+
+### Full Rebuild
+
+Rebuilds all platform outputs from scratch. Run from the project root.
+
+```bash
+export PYTHONIOENCODING=utf-8
+
+# Step 1: Fix all master skills
+python fix_skills_unified.py --all
+
+# Step 2: Sync to all platform outputs
+python sync-skills.py --targets all --validate --stats
+
+# Step 3: Populate bundles, variants, and cleanup
+python populate_all.py --phase all
+```
+
+### Single Category Update
+
+Update only one category (e.g., after adding new skills to `_master-skills/technical/`).
+
+```bash
+export PYTHONIOENCODING=utf-8
+
+python fix_skills_unified.py --category technical
+python sync-skills.py --targets all --category technical --stats
+python populate_all.py --phase all
+```
+
+### Dry-Run Validation
+
+Preview all changes without writing any files.
+
+```bash
+export PYTHONIOENCODING=utf-8
+
+python fix_skills_unified.py --all --dry-run --verbose
+python sync-skills.py --targets all --dry-run --validate --stats
+python populate_all.py --phase all --dry-run
+```
+
+### Single Platform Sync
+
+Regenerate output for only one platform.
+
+```bash
+# Gemini only
+python sync-skills.py --targets gemini --stats
+
+# Codex only
+python sync-skills.py --targets codex --validate
+
+# CLI variants only
+python sync-skills.py --targets cli
+```
+
+### Single Skill Fix and Sync
+
+Fix and sync a specific skill.
+
+```bash
+python fix_skills_unified.py --skill technical/api-development
+python sync-skills.py --targets all --skill technical/api-development
+```
+
+### Universal Adapter Batch Convert
+
+Run the Node.js adapter-based conversion independently of the Python pipeline.
+
+```bash
+node UniversalAdapters/converters/batch-converter.js _master-skills ./UniversalAdapters/output
+```

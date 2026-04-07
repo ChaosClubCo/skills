@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+nul
+
+# Project-specific
+_skill-backups/
+firebase-debug.log
+*.tmp.*
+docs/*.tmp.*
+
+# Large generated output directories
+Skills/
+adapters/
+phantom-stage/
+installed/
+_ops_logs/
+.pytest_cache/
